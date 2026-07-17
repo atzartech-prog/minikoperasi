@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Koperasi Artha Mulia - Sistem Manajemen Keuangan Modern</title>
+  <meta name="description" content="Prototype sistem manajemen keuangan koperasi simpan pinjam berbasis localstorage. Dilengkapi pencatatan anggota, simpanan, pinjaman, dan laporan keuangan interaktif.">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="brand">
+        <div class="brand-logo"><i class="fa-solid fa-vault"></i></div>
+        <div class="brand-name">ArthaMulia</div>
+      </div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-item active" data-view="dashboard">
+          <a id="nav-dashboard"><i class="fa-solid fa-chart-pie"></i><span>Dashboard</span></a>
+        </li>
+        <li class="sidebar-item" data-view="anggota">
+          <a id="nav-anggota"><i class="fa-solid fa-users"></i><span>Daftar Anggota</span></a>
+        </li>
+        <li class="sidebar-item" data-view="simpanan">
+          <a id="nav-simpanan"><i class="fa-solid fa-piggy-bank"></i><span>Simpanan</span></a>
+        </li>
+        <li class="sidebar-item" data-view="pinjaman">
+          <a id="nav-pinjaman"><i class="fa-solid fa-hand-holding-dollar"></i><span>Pinjaman</span></a>
+        </li>
+        <li class="sidebar-item" data-view="laporan">
+          <a id="nav-laporan"><i class="fa-solid fa-file-invoice-dollar"></i><span>Laporan Keuangan</span></a>
+        </li>
+        <li class="sidebar-item" data-view="pengaturan">
+          <a id="nav-pengaturan"><i class="fa-solid fa-gears"></i><span>Pengaturan</span></a>
+        </li>
+      </ul>
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">ADM</div>
+          <div class="user-info">
+            <div class="user-name">Admin Koperasi</div>
+            <div class="user-role">Super Administrator</div>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btn-quick-reset" style="padding: 8px 12px; font-size: 11px;">
+          <i class="fa-solid fa-arrow-rotate-left"></i> Reset & Seed Data
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="main-content">
+      
+      <!-- Top Header -->
+      <header>
+        <div class="header-title">
+          <button class="menu-toggle" id="sidebar-toggle" aria-label="Toggle Sidebar">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <h1 id="current-view-title">Dashboard Koperasi</h1>
+          <p id="current-view-subtitle">Ringkasan aktivitas keuangan dan statistik hari ini</p>
+        </div>
+        <div class="header-actions">
+          <div class="date-display" id="header-date" style="font-size: 13px; font-weight: 500; color: var(--color-text-muted);">
+            Jumat, 17 Juli 2026
+          </div>
+          <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle Theme">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+          <button class="notification-btn" id="notification-bell" aria-label="Show Notifications">
+            <i class="fa-solid fa-bell"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- 1. DASHBOARD VIEW -->
+      <section id="view-dashboard" class="view-section active">
+        <!-- Stats Widgets -->
+        <div class="stats-grid">
+          <div class="stat-card total-kas">
+            <div class="stat-info">
+              <span class="stat-label">Total Kas Koperasi</span>
+              <span class="stat-value" id="stat-total-kas">Rp 0</span>
+              <span class="stat-trend up"><i class="fa-solid fa-arrow-trend-up"></i> +12.4% bln ini</span>
+            </div>
+            <div class="stat-icon"><i class="fa-solid fa-wallet"></i></div>
+          </div>
+          <div class="stat-card total-simpanan">
+            <div class="stat-info">
+              <span class="stat-label">Total Simpanan Anggota</span>
+              <span class="stat-value" id="stat-total-simpanan">Rp 0</span>
+              <span class="stat-trend up"><i class="fa-solid fa-arrow-trend-up"></i> +8.2% bln ini</span>
+            </div>
+            <div class="stat-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+          </div>
+          <div class="stat-card total-pinjaman">
+            <div class="stat-info">
+              <span class="stat-label">Total Pinjaman Aktif</span>
+              <span class="stat-value" id="stat-total-pinjaman">Rp 0</span>
+              <span class="stat-trend down"><i class="fa-solid fa-arrow-trend-down"></i> -2.1% bln ini</span>
+            </div>
+            <div class="stat-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+          </div>
+          <div class="stat-card total-anggota">
+            <div class="stat-info">
+              <span class="stat-label">Total Anggota Terdaftar</span>
+              <span class="stat-value" id="stat-total-anggota">0 Org</span>
+              <span class="stat-trend up"><i class="fa-solid fa-user-plus"></i> +1 org baru</span>
+            </div>
+            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+          </div>
+        </div>
+
+        <!-- Charts & Activity Grid -->
+        <div class="dashboard-grid">
+          <!-- Main Chart Card -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title"><i class="fa-solid fa-chart-line" style="color: var(--color-primary);"></i>Tren Simpanan vs Pinjaman (2025)</h2>
+              <div class="card-actions">
+                <select id="dashboard-chart-filter" class="form-control" style="padding: 4px 10px; font-size: 12px; height: auto;">
+                  <option value="6">6 Bulan Terakhir</option>
+                  <option value="12">12 Bulan Terakhir</option>
+                </select>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="dashboard-main-chart"></canvas>
+            </div>
+          </div>
+          
+          <!-- Doughnut Chart Card -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title"><i class="fa-solid fa-chart-pie" style="color: var(--color-success);"></i>Distribusi Simpanan</h2>
+            </div>
+            <div class="chart-container">
+              <canvas id="dashboard-distribution-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activities Table -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-clock-rotate-left" style="color: var(--color-warning);"></i>Transaksi Terbaru</h2>
+            <button class="btn btn-secondary btn-sm" id="btn-view-all-transactions">Lihat Semua Transaksi</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>ID/No</th>
+                  <th>Nama Anggota</th>
+                  <th>Jenis Transaksi</th>
+                  <th>Tipe</th>
+                  <th>Jumlah</th>
+                  <th>Status/Ket</th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-recent-transactions-tbody">
+                <!-- Loaded via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. ANGGOTA VIEW -->
+      <section id="view-anggota" class="view-section">
+        <div class="card">
+          <div class="table-filter-bar">
+            <div class="search-wrapper">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="anggota-search" placeholder="Cari nama atau no anggota...">
+            </div>
+            <div class="filters-group">
+              <select id="anggota-filter-status" style="width: 150px;">
+                <option value="Semua">Semua Status</option>
+                <option value="Aktif">Aktif</option>
+                <option value="Nonaktif">Nonaktif</option>
+              </select>
+              <button class="btn btn-primary" id="btn-add-anggota">
+                <i class="fa-solid fa-user-plus"></i> Tambah Anggota
+              </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>No Anggota</th>
+                  <th>Nama Lengkap</th>
+                  <th>Telepon</th>
+                  <th>Tanggal Bergabung</th>
+                  <th>Total Simpanan</th>
+                  <th>Status Pinjaman</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="anggota-table-tbody">
+                <!-- Loaded via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. SIMPANAN VIEW -->
+      <section id="view-simpanan" class="view-section">
+        <div class="card" style="margin-bottom: 24px;">
+          <div class="table-filter-bar">
+            <div class="search-wrapper">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="simpanan-search" placeholder="Cari transaksi atau nama anggota...">
+            </div>
+            <div class="filters-group">
+              <select id="simpanan-filter-jenis" style="width: 160px;">
+                <option value="Semua">Semua Jenis Simpanan</option>
+                <option value="Pokok">Simpanan Pokok</option>
+                <option value="Wajib">Simpanan Wajib</option>
+                <option value="Sukarela">Simpanan Sukarela</option>
+              </select>
+              <button class="btn btn-success" id="btn-deposit">
+                <i class="fa-solid fa-circle-plus"></i> Setor Simpanan
+              </button>
+              <button class="btn btn-danger" id="btn-withdraw">
+                <i class="fa-solid fa-circle-minus"></i> Tarik Sukarela
+              </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>No Anggota</th>
+                  <th>Nama Anggota</th>
+                  <th>Jenis Simpanan</th>
+                  <th>Tipe</th>
+                  <th>Jumlah</th>
+                  <th>Keterangan</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="simpanan-table-tbody">
+                <!-- Loaded via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. PINJAMAN VIEW -->
+      <section id="view-pinjaman" class="view-section">
+        <div class="card">
+          <div class="table-filter-bar">
+            <div class="search-wrapper">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="pinjaman-search" placeholder="Cari nama peminjam...">
+            </div>
+            <div class="filters-group">
+              <select id="pinjaman-filter-status" style="width: 150px;">
+                <option value="Semua">Semua Status</option>
+                <option value="Pengajuan">Pengajuan</option>
+                <option value="Aktif">Aktif</option>
+                <option value="Lunas">Lunas</option>
+                <option value="Terlambat">Terlambat</option>
+              </select>
+              <button class="btn btn-primary" id="btn-apply-loan">
+                <i class="fa-solid fa-handshake-angle"></i> Ajukan Pinjaman
+              </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tanggal Pengajuan</th>
+                  <th>Nama Anggota</th>
+                  <th>Jumlah Pinjaman</th>
+                  <th>Bunga / Durasi</th>
+                  <th>Angsuran / Bln</th>
+                  <th>Sisa Pinjaman</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="pinjaman-table-tbody">
+                <!-- Loaded via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. LAPORAN VIEW -->
+      <section id="view-laporan" class="view-section">
+        <div class="report-header-print">
+          <h2>KOPERASI SIMPAN PINJAM ARTHA MULIA</h2>
+          <p>Laporan Keuangan & Perkembangan Koperasi</p>
+          <p id="print-date-range">Periode: Semua Transaksi</p>
+        </div>
+
+        <div class="card" style="margin-bottom: 24px;">
+          <div class="table-filter-bar">
+            <div class="filters-group" style="flex-wrap: wrap; width: 100%;">
+              <div class="form-group" style="min-width: 150px;">
+                <label for="report-start-date">Tanggal Mulai</label>
+                <input type="date" id="report-start-date" style="padding: 8px 12px;">
+              </div>
+              <div class="form-group" style="min-width: 150px;">
+                <label for="report-end-date">Tanggal Selesai</label>
+                <input type="date" id="report-end-date" style="padding: 8px 12px;">
+              </div>
+              <div class="form-group" style="display: flex; align-items: flex-end; justify-content: flex-end; margin-left: auto; flex-direction: row; gap: 10px;">
+                <button class="btn btn-secondary" id="btn-filter-report">
+                  <i class="fa-solid fa-filter"></i> Saring Laporan
+                </button>
+                <button class="btn btn-primary" id="btn-print-report">
+                  <i class="fa-solid fa-print"></i> Cetak Laporan
+                </button>
+                <button class="btn btn-success" id="btn-export-csv">
+                  <i class="fa-solid fa-file-excel"></i> Ekspor Excel/CSV
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial Summary Widgets -->
+        <div class="stats-grid">
+          <div class="stat-card total-kas">
+            <div class="stat-info">
+              <span class="stat-label">Total Arus Masuk (Inflow)</span>
+              <span class="stat-value text-success" id="report-total-inflow" style="color: var(--color-success);">Rp 0</span>
+              <span class="stat-trend" style="color: var(--color-text-muted);">Simpanan & Angsuran</span>
+            </div>
+            <div class="stat-icon" style="background-color: var(--color-success-light); color: var(--color-success);"><i class="fa-solid fa-circle-down"></i></div>
+          </div>
+          <div class="stat-card total-pinjaman">
+            <div class="stat-info">
+              <span class="stat-label">Total Arus Keluar (Outflow)</span>
+              <span class="stat-value text-danger" id="report-total-outflow" style="color: var(--color-danger);">Rp 0</span>
+              <span class="stat-trend" style="color: var(--color-text-muted);">Pinjaman Disalurkan & Penarikan</span>
+            </div>
+            <div class="stat-icon" style="background-color: var(--color-danger-light); color: var(--color-danger);"><i class="fa-solid fa-circle-up"></i></div>
+          </div>
+          <div class="stat-card total-simpanan">
+            <div class="stat-info">
+              <span class="stat-label">Hasil Usaha Bunga Pinjaman</span>
+              <span class="stat-value" id="report-total-revenue" style="color: var(--color-info);">Rp 0</span>
+              <span class="stat-trend" style="color: var(--color-text-muted);">Pendapatan dari Jasa/Bunga</span>
+            </div>
+            <div class="stat-icon" style="background-color: var(--color-info-light); color: var(--color-info);"><i class="fa-solid fa-hand-holding-hand"></i></div>
+          </div>
+          <div class="stat-card total-anggota">
+            <div class="stat-info">
+              <span class="stat-label">Estimasi SHU Koperasi</span>
+              <span class="stat-value" id="report-shu" style="color: var(--color-primary);">Rp 0</span>
+              <span class="stat-trend" style="color: var(--color-text-muted);">Sisa Hasil Usaha Bersih</span>
+            </div>
+            <div class="stat-icon" style="background-color: var(--color-primary-light); color: var(--color-primary);"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+          </div>
+        </div>
+
+        <!-- Cash Book Register Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-book" style="color: var(--color-primary);"></i>Buku Kas Koperasi (Rekapitulasi Mutasi)</h2>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Uraian Transaksi</th>
+                  <th>Nama Anggota</th>
+                  <th>Debit (Masuk)</th>
+                  <th>Kredit (Keluar)</th>
+                  <th>Saldo Akhir</th>
+                  <th>Kategori</th>
+                </tr>
+              </thead>
+              <tbody id="report-table-tbody">
+                <!-- Loaded via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. PENGATURAN VIEW -->
+      <section id="view-pengaturan" class="view-section">
+        <div class="detail-grid">
+          <!-- Left settings menu -->
+          <div class="card">
+            <h2 class="card-title" style="margin-bottom: 20px;"><i class="fa-solid fa-sliders"></i>Konfigurasi Koperasi</h2>
+            <form id="form-settings" onsubmit="event.preventDefault();">
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label for="settings-coop-name">Nama Koperasi</label>
+                <input type="text" id="settings-coop-name" value="Koperasi Artha Mulia">
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label for="settings-initial-cash">Modal Kas Awal Koperasi (Rp)</label>
+                <input type="number" id="settings-initial-cash" value="100000000">
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label for="settings-simpanan-pokok">Nominal Simpanan Pokok (Rp)</label>
+                <input type="number" id="settings-simpanan-pokok" value="500000">
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label for="settings-simpanan-wajib">Nominal Simpanan Wajib / Bulan (Rp)</label>
+                <input type="number" id="settings-simpanan-wajib" value="50000">
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label for="settings-default-bunga">Suku Bunga Pinjaman Standar (% / Bulan)</label>
+                <input type="number" step="0.1" id="settings-default-bunga" value="1.5">
+              </div>
+              <button class="btn btn-primary" id="btn-save-settings" style="width: 100%;">
+                <i class="fa-solid fa-floppy-disk"></i> Simpan Konfigurasi
+              </button>
+            </form>
+          </div>
+
+          <!-- Right settings options (Data backup/management) -->
+          <div class="card">
+            <h2 class="card-title" style="margin-bottom: 20px;"><i class="fa-solid fa-database"></i>Manajemen Data & Backup</h2>
+            <div class="info-list" style="margin-bottom: 24px;">
+              <p style="font-size: 13px; color: var(--color-text-muted); line-height: 1.6; margin-bottom: 16px;">
+                Semua data aplikasi ini disimpan di browser lokal menggunakan teknologi <strong>HTML5 LocalStorage</strong>. Untuk menjaga keamanan data Anda, lakukan backup secara berkala ke berkas JSON.
+              </p>
+              
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn btn-secondary" id="btn-backup-data" style="justify-content: flex-start;">
+                  <i class="fa-solid fa-file-arrow-down" style="color: var(--color-primary);"></i> Ekspor Data Koperasi (JSON Backup)
+                </button>
+                
+                <div style="position: relative;">
+                  <input type="file" id="file-import-data" accept=".json" style="display: none;">
+                  <button class="btn btn-secondary" id="btn-import-trigger" style="justify-content: flex-start; width: 100%;">
+                    <i class="fa-solid fa-file-arrow-up" style="color: var(--color-success);"></i> Impor Data Koperasi dari JSON
+                  </button>
+                </div>
+                
+                <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 10px 0;">
+                
+                <button class="btn btn-secondary" id="btn-seed-dummy" style="justify-content: flex-start; border-color: var(--color-warning);">
+                  <i class="fa-solid fa-database" style="color: var(--color-warning);"></i> Isi dengan Data Sampel Uji Coba (Seed Dummy)
+                </button>
+                
+                <button class="btn btn-danger" id="btn-reset-db" style="justify-content: flex-start;">
+                  <i class="fa-solid fa-trash-can"></i> Hapus Seluruh Database (Reset Pabrik)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+    </main>
+  </div>
+
+  <!-- MODALS CONTAINER -->
+  
+  <!-- A. ANGGOTA MODAL (Add / Edit) -->
+  <div class="modal-overlay" id="modal-anggota">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-anggota-title">Registrasi Anggota Baru</h3>
+        <button class="modal-close" data-close="modal-anggota">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-anggota" onsubmit="event.preventDefault();">
+          <input type="hidden" id="anggota-id">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="anggota-no">Nomor Anggota (Otomatis)</label>
+              <input type="text" id="anggota-no" readonly placeholder="KOP-XXX">
+            </div>
+            <div class="form-group">
+              <label for="anggota-nama">Nama Lengkap *</label>
+              <input type="text" id="anggota-nama" required placeholder="Contoh: Budi Santoso">
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="anggota-telepon">Nomor Telepon / WA *</label>
+              <input type="tel" id="anggota-telepon" required placeholder="Contoh: 08123456789">
+            </div>
+            <div class="form-group">
+              <label for="anggota-tgl">Tanggal Bergabung *</label>
+              <input type="date" id="anggota-tgl" required>
+            </div>
+          </div>
+          <div class="form-group full-width" style="margin-top: 16px;">
+            <label for="anggota-alamat">Alamat Lengkap</label>
+            <textarea id="anggota-alamat" rows="3" placeholder="Alamat rumah tinggal saat ini..."></textarea>
+          </div>
+          <div class="form-group" style="margin-top: 16px;" id="anggota-status-wrapper">
+            <label for="anggota-status">Status Keanggotaan</label>
+            <select id="anggota-status">
+              <option value="Aktif">Aktif</option>
+              <option value="Nonaktif">Nonaktif</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-anggota">Batal</button>
+        <button class="btn btn-primary" id="btn-save-anggota">Simpan Anggota</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- B. SIMPANAN MODAL (Deposit / Withdraw) -->
+  <div class="modal-overlay" id="modal-simpanan">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-simpanan-title">Form Setoran Simpanan</h3>
+        <button class="modal-close" data-close="modal-simpanan">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-simpanan" onsubmit="event.preventDefault();">
+          <input type="hidden" id="simpanan-type" value="Setoran"> <!-- Setoran atau Penarikan -->
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label for="simpanan-anggota-id">Pilih Anggota *</label>
+            <select id="simpanan-anggota-id" required>
+              <option value="">-- Pilih Anggota Koperasi --</option>
+              <!-- Loaded dynamically via JS -->
+            </select>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="simpanan-jenis">Jenis Simpanan *</label>
+              <select id="simpanan-jenis" required>
+                <option value="Wajib">Simpanan Wajib (Bulanan)</option>
+                <option value="Sukarela">Simpanan Sukarela</option>
+                <option value="Pokok">Simpanan Pokok (Sekali)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="simpanan-tgl">Tanggal Transaksi *</label>
+              <input type="date" id="simpanan-tgl" required>
+            </div>
+          </div>
+          <div class="form-grid" style="margin-top: 16px;">
+            <div class="form-group">
+              <label for="simpanan-jumlah">Nominal Transaksi (Rp) *</label>
+              <input type="number" id="simpanan-jumlah" required min="1000" placeholder="Contoh: 100000">
+            </div>
+            <div class="form-group">
+              <label for="simpanan-keterangan">Keterangan</label>
+              <input type="text" id="simpanan-keterangan" placeholder="Contoh: Setoran Wajib Bulan Juli">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-simpanan">Batal</button>
+        <button class="btn btn-success" id="btn-save-simpanan">Simpan Transaksi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- C. PINJAMAN MODAL (Submission / Pengajuan) -->
+  <div class="modal-overlay" id="modal-pinjaman">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Formulir Pengajuan Pinjaman</h3>
+        <button class="modal-close" data-close="modal-pinjaman">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-pinjaman" onsubmit="event.preventDefault();">
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label for="pinjaman-anggota-id">Anggota Peminjam *</label>
+            <select id="pinjaman-anggota-id" required>
+              <option value="">-- Pilih Anggota Koperasi --</option>
+              <!-- Dynamic -->
+            </select>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="pinjaman-tgl">Tanggal Pengajuan *</label>
+              <input type="date" id="pinjaman-tgl" required>
+            </div>
+            <div class="form-group">
+              <label for="pinjaman-jumlah">Besar Pinjaman (Rp) *</label>
+              <input type="number" id="pinjaman-jumlah" required min="100000" placeholder="Contoh: 5000000">
+            </div>
+          </div>
+          <div class="form-grid" style="margin-top: 16px;">
+            <div class="form-group">
+              <label for="pinjaman-durasi">Durasi Pengembalian (Bulan) *</label>
+              <select id="pinjaman-durasi" required>
+                <option value="3">3 Bulan</option>
+                <option value="6">6 Bulan</option>
+                <option value="10">10 Bulan</option>
+                <option value="12">12 Bulan</option>
+                <option value="18">18 Bulan</option>
+                <option value="24">24 Bulan</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="pinjaman-bunga">Suku Bunga (% / Bulan) *</label>
+              <input type="number" step="0.1" id="pinjaman-bunga" required value="1.5">
+            </div>
+          </div>
+          
+          <div class="form-group" style="margin-top: 16px;">
+            <label for="pinjaman-keterangan">Tujuan / Keperluan Pinjaman *</label>
+            <input type="text" id="pinjaman-keterangan" required placeholder="Contoh: Modal usaha dagang sayur / Biaya berobat">
+          </div>
+
+          <!-- Live repayment simulation summary panel -->
+          <div class="simulation-panel">
+            <h4>Simulasi Angsuran Pinjaman:</h4>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span>Pokok Angsuran / Bulan:</span>
+                <span id="sim-pokok-bulanan">Rp 0</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>Jasa Bunga Koperasi / Bulan:</span>
+                <span id="sim-bunga-bulanan">Rp 0</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-weight: 700; border-top: 1px solid var(--glass-border); padding-top: 6px;">
+                <span>Estimasi Angsuran / Bulan:</span>
+                <span id="sim-total-bulanan" style="color: var(--color-warning);">Rp 0</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--color-text-muted);">
+                <span>Total Pengembalian:</span>
+                <span id="sim-total-pengembalian">Rp 0</span>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-pinjaman">Batal</button>
+        <button class="btn btn-primary" id="btn-save-pinjaman">Ajukan Pinjaman</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- D. ANGSURAN MODAL (Repayment / Pelunasan) -->
+  <div class="modal-overlay" id="modal-angsuran">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Formulir Bayar Angsuran</h3>
+        <button class="modal-close" data-close="modal-angsuran">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-angsuran" onsubmit="event.preventDefault();">
+          <input type="hidden" id="angsuran-pinjaman-id">
+          
+          <div class="info-list" style="margin-bottom: 20px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: var(--border-radius-md); border: 1px solid var(--glass-border);">
+            <div class="info-row">
+              <span class="info-label">Nama Peminjam:</span>
+              <span class="info-value" id="angsuran-nama-peminjam">Ahmad</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Total Pinjaman Pokok:</span>
+              <span class="info-value" id="angsuran-pokok-total">Rp 0</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Total Sisa Tagihan:</span>
+              <span class="info-value" id="angsuran-sisa-tagihan">Rp 0</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Kewajiban Angsuran Bulanan:</span>
+              <span class="info-value" id="angsuran-kewajiban-bulanan" style="color: var(--color-warning);">Rp 0</span>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="angsuran-tgl">Tanggal Pembayaran *</label>
+              <input type="date" id="angsuran-tgl" required>
+            </div>
+            <div class="form-group">
+              <label for="angsuran-jumlah">Jumlah Bayar Angsuran (Rp) *</label>
+              <input type="number" id="angsuran-jumlah" required placeholder="Rp 0">
+            </div>
+          </div>
+          
+          <div class="form-grid" style="margin-top: 16px;">
+            <div class="form-group">
+              <label for="angsuran-denda">Denda Keterlambatan (Opsional, Rp)</label>
+              <input type="number" id="angsuran-denda" value="0" placeholder="Rp 0">
+            </div>
+            <div class="form-group">
+              <label for="angsuran-keterangan">Keterangan / Catatan</label>
+              <input type="text" id="angsuran-keterangan" placeholder="Contoh: Angsuran Ke-4">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-angsuran">Batal</button>
+        <button class="btn btn-success" id="btn-save-angsuran">Simpan Angsuran</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- E. DETAIL VIEW MODAL (Show Info & History) -->
+  <div class="modal-overlay" id="modal-detail">
+    <div class="modal-container" style="max-width: 750px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-detail-title">Detail Informasi Anggota</h3>
+        <button class="modal-close" data-close="modal-detail">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-detail-body">
+        <!-- Rendered via JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-detail">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Wrapper -->
+  <div class="toast-container" id="toast-wrapper"></div>
+
+  <!-- Application Logic JavaScript -->
+  <script src="dummy-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
